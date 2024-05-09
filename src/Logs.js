@@ -5,8 +5,6 @@ import { getBlockNumber } from '@wagmi/core'
 import { getBlock } from '@wagmi/core'
 import { getTransaction } from '@wagmi/core'
 
-import { gnosis } from 'wagmi/chains'
-
 /* eslint-disable */
 
 const UPDATE_INTERVAL_MS = 4_000;
@@ -177,7 +175,7 @@ export default function Logs() {
           <div
             id="transactions"
             style={{
-              minHeight: '300px',
+              height: '330px',
               marginBottom: '16px'
             }}
           >
@@ -188,24 +186,35 @@ export default function Logs() {
             >
               Chosen block <strong>{chosenBlock}</strong> content:
             </div>
-            {
-              transations_Loading && <strong>Loading...</strong>
-            }
-            {
-              transactions.map(elem =>
-                <div
-                  onClick={()=>{loadTx(elem)}}
-                  style={{
-                    fontWeight: elem === chosenTx ? '700' : '400',
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                    marginBottom: '4px'
-                  }}
-                >
-                  {elem}
-                </div>
-              )
-            }
+            <div
+                id="transactions-list"
+                style={{
+                  maxHeight: '300px',
+                  overflow: 'auto',
+                  maxWidth: '660px',
+                  width: '100%',
+                  margin: 'auto',
+                }}
+              >
+                {
+                  transations_Loading && <strong>Loading...</strong>
+                }
+                {
+                  transactions.map(elem =>
+                    <div
+                      onClick={()=>{loadTx(elem)}}
+                      style={{
+                        fontWeight: elem === chosenTx ? '700' : '400',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        marginBottom: '4px'
+                      }}
+                    >
+                      {elem}
+                    </div>
+                  )
+                }
+              </div>
           </div>
           <div
             id="logs"
