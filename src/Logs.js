@@ -83,6 +83,7 @@ export default function Logs() {
 
   const loadTx = async (tx) => {
     set_chosenTx(tx);
+    set_tx(null);
     set_tx_Loading(true);
     try {
       const transaction = await getTransaction(config, {
