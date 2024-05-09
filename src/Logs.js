@@ -75,6 +75,7 @@ export default function Logs() {
       console.log(block)
     } catch (e) {
       console.error(e)
+      e.shortMessage && stringify(e.shortMessage)
     }
     set_transations_Loading(false);
   }
@@ -91,6 +92,7 @@ export default function Logs() {
       console.log(transaction)
     } catch (e) {
       console.error(e)
+      e.shortMessage && set_tx(e.shortMessage)
     }
     set_tx_Loading(false);
   }
