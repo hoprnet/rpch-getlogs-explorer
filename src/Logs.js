@@ -7,15 +7,16 @@ import { PublicClient, createClient, custom, publicActions } from 'viem';
 
 /* eslint-disable */
 
-const UPDATE_INTERVAL_MS = 4_000;
+const UPDATE_INTERVAL_MS = 20_000;
 
-const RPC = 'https://rpc.ankr.com/eth';
+const RPC = 'https://rpc.gnosischain.com';
 
 const RPChOptions = {
-  forceZeroHop: true,
+//  forceZeroHop: true,
   provider: RPC,
+  discoveryPlatformEndpoint: 'https://discovery-platform.staging.hoprnet.link'
 };
-const RPChToken = '9979a6246bf718649e9c22e72bf0412f1656c74d0d1ae953';
+const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
 
 const client = createPublicClient({
   chain: mainnet,
@@ -28,8 +29,15 @@ const client2 = function publicRPChClient() {
       chain: mainnet,
       transport: custom({
           async request({ method, params }) {
-              const response = await RPChSDK.send({ method, params, jsonrpc: '2.0' });
-              const responseJson = await response.json();
+              console.log('debug method', method, params)
+              const payload = { method, params, jsonrpc: '2.0' };
+              console.log('debug payload', payload)
+              const response = await RPChSDK.send(payload);
+              console.log('debug response', response)
+              const text = response.text;
+              console.log('debug text', text)
+              const responseJson = JSON.parse(text).result;
+              console.log('debug responseJson', responseJson)
               return responseJson;
           },
       }),
@@ -52,10 +60,10 @@ export default function Logs() {
   useEffect(() => {
     async function getBlockNumberWrapper() {
       const blockNumberTmp = await client2().getBlockNumber();
-      console.log('blockNumberTmp', blockNumberTmp)
-      // set_lastUpdate(Date.now());
-      // set_blockNumber(Number(blockNumberTmp));
-      // addBlock(Number(blockNumberTmp));
+      console.log('debug blockNumberTmp', blockNumberTmp)
+      set_lastUpdate(Date.now());
+      set_blockNumber(Number(blockNumberTmp));
+      addBlock(Number(blockNumberTmp));
     }
 
     getBlockNumberWrapper();
@@ -102,7 +110,7 @@ export default function Logs() {
         nubmer: blockNumber
       })
       set_transactions(block.transactions)
-      console.log(block)
+      console.log('debug block', block)
     } catch (e) {
       console.error(e)
       e.shortMessage && stringify(e.shortMessage)
@@ -115,11 +123,11 @@ export default function Logs() {
     set_tx(null);
     set_tx_Loading(true);
     try {
-      const transaction = await client.getTransaction({
+      const transaction = await client2().getTransaction({
         hash: tx
       })
       set_tx(transaction)
-      console.log(transaction)
+      console.log('debug transaction', transaction)
     } catch (e) {
       console.error(e)
       e.shortMessage && set_tx(e.shortMessage)
