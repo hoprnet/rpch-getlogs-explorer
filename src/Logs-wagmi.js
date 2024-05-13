@@ -1,40 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { createPublicClient, http } from 'viem'
-import { mainnet } from 'viem/chains'
+import { config } from './config-wagmi'
 
-import SDK from '@rpch/sdk';
-import { PublicClient, createClient, custom, publicActions } from 'viem';
+import { getBlockNumber } from '@wagmi/core'
+import { getBlock } from '@wagmi/core'
+import { getTransaction } from '@wagmi/core'
 
 /* eslint-disable */
 
 const UPDATE_INTERVAL_MS = 4_000;
-
-const RPC = 'https://rpc.ankr.com/eth';
-
-const RPChOptions = {
-  forceZeroHop: true,
-  provider: RPC,
-};
-const RPChToken = '9979a6246bf718649e9c22e72bf0412f1656c74d0d1ae953';
-
-const client = createPublicClient({
-  chain: mainnet,
-  transport: http(RPC),
-})
-
-const RPChSDK = new SDK(RPChToken, RPChOptions);
-const client2 = function publicRPChClient() {
-  return createClient({
-      chain: mainnet,
-      transport: custom({
-          async request({ method, params }) {
-              const response = await RPChSDK.send({ method, params, jsonrpc: '2.0' });
-              const responseJson = await response.json();
-              return responseJson;
-          },
-      }),
-  }).extend(publicActions);
-}
 
 export default function Logs() {
   const [blockNumber, set_blockNumber] = useState(null);
@@ -48,14 +21,12 @@ export default function Logs() {
   const [lastUpdate, set_lastUpdate] = useState(null);
   const [history, set_history] = useState({});
 
-
   useEffect(() => {
     async function getBlockNumberWrapper() {
-      const blockNumberTmp = await client2().getBlockNumber();
-      console.log('blockNumberTmp', blockNumberTmp)
-      // set_lastUpdate(Date.now());
-      // set_blockNumber(Number(blockNumberTmp));
-      // addBlock(Number(blockNumberTmp));
+      const blockNumberTmp = await getBlockNumber(config);
+      set_lastUpdate(Date.now());
+      set_blockNumber(Number(blockNumberTmp));
+      addBlock(Number(blockNumberTmp));
     }
 
     getBlockNumberWrapper();
@@ -66,7 +37,6 @@ export default function Logs() {
     //Clearing the interval
     return () => clearInterval(interval);
   }, []);
-
 
   const addBlock = (block) => {
     set_blocks(prev => {
@@ -98,8 +68,8 @@ export default function Logs() {
     set_tx(null);
     set_chosenTx(null);
     try {
-      const block = await client.getBlock({
-        nubmer: blockNumber
+      const block = await getBlock(config, {
+        blockNumber: blockNumber
       })
       set_transactions(block.transactions)
       console.log(block)
@@ -115,7 +85,7 @@ export default function Logs() {
     set_tx(null);
     set_tx_Loading(true);
     try {
-      const transaction = await client.getTransaction({
+      const transaction = await getTransaction(config, {
         hash: tx
       })
       set_tx(transaction)
