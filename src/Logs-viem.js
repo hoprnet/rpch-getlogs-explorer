@@ -1,13 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { config } from './config-wagmi'
+import { createPublicClient, http } from 'viem'
+import { mainnet } from 'viem/chains'
 
-import { getBlockNumber } from '@wagmi/core'
-import { getBlock } from '@wagmi/core'
-import { getTransaction } from '@wagmi/core'
+import SDK from '@rpch/sdk';
+import { PublicClient, createClient, custom, publicActions } from 'viem';
 
 /* eslint-disable */
 
-const UPDATE_INTERVAL_MS = 4_000;
+const UPDATE_INTERVAL_MS = 20_000;
+
+const RPC = 'https://rpc.gnosischain.com';
+
+const RPChOptions = {
+//  forceZeroHop: true,
+  provider: RPC,
+  discoveryPlatformEndpoint: 'https://discovery-platform.staging.hoprnet.link'
+};
+const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
+
+// const client = createPublicClient({
+//   chain: mainnet,
+//   transport: http(RPC),
+// })
+
+const RPChSDK = new SDK(RPChToken, RPChOptions);
+const client2 = function publicRPChClient() {
+  return createClient({
+      chain: mainnet,
+      transport: custom({
+          async request({ method, params }) {
+              console.log('debug method', method, params)
+              const payload = { method, params, jsonrpc: '2.0' };
+              console.log('debug payload', payload)
+              const response = await RPChSDK.send(payload);
+              console.log('debug response', response)
+              const text = response.text;
+              console.log('debug text', text)
+              const responseJson = JSON.parse(text).result;
+              console.log('debug responseJson', responseJson)
+              return responseJson;
+          },
+      }),
+  }).extend(publicActions);
+}
 
 export default function Logs() {
   const [blockNumber, set_blockNumber] = useState(null);
@@ -21,9 +56,11 @@ export default function Logs() {
   const [lastUpdate, set_lastUpdate] = useState(null);
   const [history, set_history] = useState({});
 
+
   useEffect(() => {
     async function getBlockNumberWrapper() {
-      const blockNumberTmp = await getBlockNumber(config);
+      const blockNumberTmp = await client2().getBlockNumber();
+      console.log('debug blockNumberTmp', blockNumberTmp)
       set_lastUpdate(Date.now());
       set_blockNumber(Number(blockNumberTmp));
       addBlock(Number(blockNumberTmp));
@@ -37,6 +74,7 @@ export default function Logs() {
     //Clearing the interval
     return () => clearInterval(interval);
   }, []);
+
 
   const addBlock = (block) => {
     set_blocks(prev => {
@@ -68,11 +106,11 @@ export default function Logs() {
     set_tx(null);
     set_chosenTx(null);
     try {
-      const block = await getBlock(config, {
-        blockNumber: blockNumber
+      const block = await client2().getBlock({
+        nubmer: blockNumber
       })
       set_transactions(block.transactions)
-      console.log(block)
+      console.log('debug block', block)
     } catch (e) {
       console.error(e)
       e.shortMessage && stringify(e.shortMessage)
@@ -85,11 +123,11 @@ export default function Logs() {
     set_tx(null);
     set_tx_Loading(true);
     try {
-      const transaction = await getTransaction(config, {
+      const transaction = await client2().getTransaction({
         hash: tx
       })
       set_tx(transaction)
-      console.log(transaction)
+      console.log('debug transaction', transaction)
     } catch (e) {
       console.error(e)
       e.shortMessage && set_tx(e.shortMessage)

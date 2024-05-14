@@ -1,48 +1,15 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { createPublicClient, http } from 'viem'
 import { mainnet } from 'viem/chains'
 
-import SDK from '@rpch/sdk';
-import { PublicClient, createClient, custom, publicActions } from 'viem';
-
-/* eslint-disable */
-
 const UPDATE_INTERVAL_MS = 20_000;
-
 const RPC = 'https://rpc.gnosischain.com';
 
-const RPChOptions = {
-//  forceZeroHop: true,
-  provider: RPC,
-  discoveryPlatformEndpoint: 'https://discovery-platform.staging.hoprnet.link'
-};
-const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
-
-// const client = createPublicClient({
-//   chain: mainnet,
-//   transport: http(RPC),
-// })
-
-const RPChSDK = new SDK(RPChToken, RPChOptions);
-const client2 = function publicRPChClient() {
-  return createClient({
-      chain: mainnet,
-      transport: custom({
-          async request({ method, params }) {
-              console.log('debug method', method, params)
-              const payload = { method, params, jsonrpc: '2.0' };
-              console.log('debug payload', payload)
-              const response = await RPChSDK.send(payload);
-              console.log('debug response', response)
-              const text = response.text;
-              console.log('debug text', text)
-              const responseJson = JSON.parse(text).result;
-              console.log('debug responseJson', responseJson)
-              return responseJson;
-          },
-      }),
-  }).extend(publicActions);
-}
+const client = createPublicClient({
+  chain: mainnet,
+  transport: http(RPC),
+})
 
 export default function Logs() {
   const [blockNumber, set_blockNumber] = useState(null);
@@ -54,13 +21,11 @@ export default function Logs() {
   const [tx_Loading, set_tx_Loading] = useState(false);
   const [blocks, set_blocks] = useState([]);
   const [lastUpdate, set_lastUpdate] = useState(null);
-  const [history, set_history] = useState({});
 
 
   useEffect(() => {
     async function getBlockNumberWrapper() {
-      const blockNumberTmp = await client2().getBlockNumber();
-      console.log('debug blockNumberTmp', blockNumberTmp)
+      const blockNumberTmp = await client.getBlockNumber();
       set_lastUpdate(Date.now());
       set_blockNumber(Number(blockNumberTmp));
       addBlock(Number(blockNumberTmp));
@@ -80,11 +45,11 @@ export default function Logs() {
     set_blocks(prev => {
       if (prev.length === 0) return [block];
       else {
-        if (prev[prev.length -1] + 1 === block) {
+        if (prev[prev.length - 1] + 1 === block) {
           return [...prev, block];
         }
-        else if (block > prev[prev.length -1]) {
-          let lastSavedBlock = prev[prev.length -1];
+        else if (block > prev[prev.length - 1]) {
+          let lastSavedBlock = prev[prev.length - 1];
           let newBlocks = block - lastSavedBlock;
           let tmp = [];
           for (let i = 0; i < newBlocks; i++) {
@@ -106,11 +71,10 @@ export default function Logs() {
     set_tx(null);
     set_chosenTx(null);
     try {
-      const block = await client2().getBlock({
+      const block = await client.getBlock({
         nubmer: blockNumber
       })
       set_transactions(block.transactions)
-      console.log('debug block', block)
     } catch (e) {
       console.error(e)
       e.shortMessage && stringify(e.shortMessage)
@@ -123,11 +87,10 @@ export default function Logs() {
     set_tx(null);
     set_tx_Loading(true);
     try {
-      const transaction = await client2().getTransaction({
+      const transaction = await client.getTransaction({
         hash: tx
       })
       set_tx(transaction)
-      console.log('debug transaction', transaction)
     } catch (e) {
       console.error(e)
       e.shortMessage && set_tx(e.shortMessage)
@@ -140,16 +103,9 @@ export default function Logs() {
   return (
     <div
       id="whole"
-      style={{
-        display: 'flex',
-        flexDirection: 'column'
-      }}
     >
       <div
         id="status"
-        style={{
-          display: 'none',
-        }}
       >
         Status
         <div>Last update: {lastUpdate ? new Date(lastUpdate).toGMTString() : 'Loading ...'}</div>
@@ -158,128 +114,77 @@ export default function Logs() {
       </div>
       <div
         id="blocks-and-rest"
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
       >
         <div
           id="blocks"
-          style={{
-            maxHeight: 'calc( 100vh - 200px )',
-            width: '150px',
-          }}
         >
-            <div
-              style={{
-                marginBottom: '8px'
-              }}
-            >
-              Blocs created since dApp load:
-            </div>
-              <div
-                id="blocks-list"
-                style={{
-                  maxHeight: 'calc( 100vh - 200px )',
-                  width: '150px',
-                  overflow: 'auto',
-                  marginRight: '16px',
-                  marginLeft: '16px'
-                }}
-              >
-                {
-                  blocks.map(elem =>
-                  <div
-                    onClick={()=>{loadBlock(elem)}}
-                    style={{
-                      fontWeight: elem === chosenBlock ? '700' : '400',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      marginBottom: '4px'
-                    }}
-                  >
-                    {elem}
-                  </div>
-                  )
-                }
+          <div
+            id='blocks-title'
+          >
+            Blocks created since dApp load:
+          </div>
+          <div
+            id="blocks-list"
+          >
+            {
+              blocks.map(elem =>
+                <div
+                  onClick={() => { loadBlock(elem) }}
+                  className={`block-list-item ${elem === chosenBlock ? 'weight700' : 'weight400' }`}
+                >
+                  {elem}
                 </div>
+              )
+            }
+          </div>
         </div>
         <div
           id="explorer"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            flexGrow: 1
-          }}
         >
           <div
             id="transactions"
-            style={{
-              height: '330px',
-              marginBottom: '16px'
-            }}
           >
             <div
-              style={{
-                marginBottom: '8px'
-              }}
+              id="transactions-title"
             >
-              Chosen block <strong>{chosenBlock}</strong> content:
+              { chosenBlock && <>Chosen block <strong>{chosenBlock}</strong> content: </> }
+              { !chosenBlock && <>Choose a block! </> }
             </div>
             <div
-                id="transactions-list"
-                style={{
-                  maxHeight: '300px',
-                  overflow: 'auto',
-                  maxWidth: '660px',
-                  width: '100%',
-                  margin: 'auto',
-                }}
-              >
-                {
-                  transations_Loading && <strong>Loading...</strong>
-                }
-                {
-                  transactions.map(elem =>
-                    <div
-                      onClick={()=>{loadTx(elem)}}
-                      style={{
-                        fontWeight: elem === chosenTx ? '700' : '400',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        marginBottom: '4px'
-                      }}
-                    >
-                      {elem}
-                    </div>
-                  )
-                }
-              </div>
+              id="transactions-list"
+            >
+              {
+                transations_Loading && <strong>Loading...</strong>
+              }
+              {
+                transactions.map(elem =>
+                  <div
+                    className={`transactions-list-item ${elem === chosenTx ? 'weight700' : 'weight400' }`}
+                    onClick={() => { loadTx(elem) }}
+                  >
+                    {elem}
+                  </div>
+                )
+              }
+            </div>
           </div>
           <div
             id="logs"
           >
             <div
-              style={{
-                marginBottom: '8px'
-              }}
+              id='logs-title'
             >
-              Chosen hash content:
+
+              { formattedJson && <>Chosen hash content:</> }
+              { !formattedJson && <>Choose a hash! </> }
             </div>
             {
               tx_Loading && <strong>Loading...</strong>
             }
             <pre
               id="json"
-              style={{
-                maxWidth: '100vw',
-                overflowWrap: 'anywhere',
-                wordBreak: 'break-all',
-                whiteSpace: 'pre-line',
-                margin: '16px',
-              }}
             >
-               {formattedJson}
+              {formattedJson}
             </pre>
           </div>
         </div>
