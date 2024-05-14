@@ -1,15 +1,35 @@
 /* eslint-disable */
 import React, { useState, useEffect } from 'react';
-import { createPublicClient, http } from 'viem'
-import { gnosis } from 'viem/chains'
+import { createClient, custom, publicActions } from 'viem';
+import { gnosis } from 'viem/chains';
+import SDK from '@rpch/sdk';
 
 const UPDATE_INTERVAL_MS = 10_000;
 const RPC = 'https://rpc.gnosischain.com';
 
-const client = createPublicClient({
-  chain: gnosis,
-  transport: http(RPC),
-})
+const RPChOptions = {
+  forceZeroHop: true,
+  provider: RPC,
+  discoveryPlatformEndpoint: 'https://discovery-platform.staging.hoprnet.link'
+};
+const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
+
+const RPChSDK = new SDK(RPChToken, RPChOptions);
+const client = function publicRPChClient() {
+  return createClient({
+    chain: gnosis,
+    transport: custom({
+      async request({ method, params }) {
+        const payload = { method, params, jsonrpc: '2.0', id: Math.random() };
+        const response = await RPChSDK.send(payload);
+        console.log('debug response', response);
+        const responseJson = JSON.parse(response.text).result;
+        return responseJson;
+      },
+    }),
+  }).extend(publicActions);
+}
+
 
 export default function Logs() {
   const [blockNumber, set_blockNumber] = useState(null);
@@ -32,7 +52,8 @@ export default function Logs() {
       while (!loaded) {
         try {
           set_blockLoading(true);
-          const blockNumberTmp = await client.getBlockNumber();
+          const blockNumberTmp = await client().getBlockNumber();
+          console.log('debug blockNumberTmp', blockNumberTmp)
           set_lastUpdate(Date.now());
           set_blockNumber(Number(blockNumberTmp));
           addBlock(Number(blockNumberTmp));
@@ -89,7 +110,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const block = await client.getBlock({
+        const block = await client().getBlock({
           nubmer: blockNumber
         })
         set_transactions(block.transactions);
@@ -113,7 +134,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const transaction = await client.getTransaction({
+        const transaction = await client().getTransaction({
           hash: tx
         });
         set_tx(transaction);
