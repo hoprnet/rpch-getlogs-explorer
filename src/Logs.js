@@ -26,10 +26,10 @@ export default function Logs() {
 
   useEffect(() => {
     async function getBlockNumberWrapper() {
-      if(blockLoading) return;
+      if (blockLoading) return;
       let loaded = false;
       let tryNumber = 0;
-      while(!loaded) {
+      while (!loaded) {
         try {
           set_blockLoading(true);
           const blockNumberTmp = await client.getBlockNumber();
@@ -87,7 +87,7 @@ export default function Logs() {
 
     let loaded = false;
     let tryNumber = 0;
-    while(!loaded) {
+    while (!loaded) {
       try {
         const block = await client.getBlock({
           nubmer: blockNumber
@@ -111,7 +111,7 @@ export default function Logs() {
 
     let loaded = false;
     let tryNumber = 0;
-    while(!loaded) {
+    while (!loaded) {
       try {
         const transaction = await client.getTransaction({
           hash: tx
