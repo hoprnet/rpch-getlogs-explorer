@@ -1,13 +1,13 @@
 /* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { createPublicClient, http } from 'viem'
-import { mainnet } from 'viem/chains'
+import { gnosis } from 'viem/chains'
 
-const UPDATE_INTERVAL_MS = 1_000;
+const UPDATE_INTERVAL_MS = 10_000;
 const RPC = 'https://rpc.gnosischain.com';
 
 const client = createPublicClient({
-  chain: mainnet,
+  chain: gnosis,
   transport: http(RPC),
 })
 
