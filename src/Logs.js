@@ -18,10 +18,10 @@ const RPChOptions = {
 };
 const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
 
-const client = createPublicClient({
-  chain: mainnet,
-  transport: http(RPC),
-})
+// const client = createPublicClient({
+//   chain: mainnet,
+//   transport: http(RPC),
+// })
 
 const RPChSDK = new SDK(RPChToken, RPChOptions);
 const client2 = function publicRPChClient() {
@@ -106,7 +106,7 @@ export default function Logs() {
     set_tx(null);
     set_chosenTx(null);
     try {
-      const block = await client.getBlock({
+      const block = await client2().getBlock({
         nubmer: blockNumber
       })
       set_transactions(block.transactions)
