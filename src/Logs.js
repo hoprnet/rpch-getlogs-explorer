@@ -15,8 +15,7 @@ const RPChOptions = {
 const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
 
 const RPChSDK = new SDK(RPChToken, RPChOptions);
-const client = function publicRPChClient() {
-  return createClient({
+const client =  createClient({
     chain: gnosis,
     transport: custom({
       async request({ method, params }) {
@@ -28,7 +27,6 @@ const client = function publicRPChClient() {
       },
     }),
   }).extend(publicActions);
-}
 
 
 export default function Logs() {
@@ -52,7 +50,7 @@ export default function Logs() {
       while (!loaded) {
         try {
           set_blockLoading(true);
-          const blockNumberTmp = await client().getBlockNumber();
+          const blockNumberTmp = await client.getBlockNumber();
           console.log('debug blockNumberTmp', blockNumberTmp)
           set_lastUpdate(Date.now());
           set_blockNumber(Number(blockNumberTmp));
@@ -110,7 +108,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const block = await client().getBlock({
+        const block = await client.getBlock({
           nubmer: blockNumber
         })
         set_transactions(block.transactions);
@@ -134,7 +132,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const transaction = await client().getTransaction({
+        const transaction = await client.getTransaction({
           hash: tx
         });
         set_tx(transaction);
