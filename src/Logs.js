@@ -15,20 +15,18 @@ const RPChOptions = {
 const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
 
 const RPChSDK = new SDK(RPChToken, RPChOptions);
-const client = function publicRPChClient() {
-  return createClient({
-    chain: gnosis,
-    transport: custom({
-      async request({ method, params }) {
-        const payload = { method, params, jsonrpc: '2.0', id: Math.random() };
-        const response = await RPChSDK.send(payload);
-        console.log('debug response', response);
-        const responseJson = JSON.parse(response.text).result;
-        return responseJson;
-      },
-    }),
-  }).extend(publicActions);
-}
+const client = createClient({
+  chain: gnosis,
+  transport: custom({
+    async request({ method, params }) {
+      const payload = { method, params, jsonrpc: '2.0', id: Math.random() };
+      const response = await RPChSDK.send(payload);
+      console.log('debug response', response);
+      const responseJson = JSON.parse(response.text).result;
+      return responseJson;
+    },
+  }),
+}).extend(publicActions);
 
 
 export default function Logs() {
@@ -52,8 +50,7 @@ export default function Logs() {
       while (!loaded) {
         try {
           set_blockLoading(true);
-          const blockNumberTmp = await client().getBlockNumber();
-          console.log('debug blockNumberTmp', blockNumberTmp)
+          const blockNumberTmp = await client.getBlockNumber();
           set_lastUpdate(Date.now());
           set_blockNumber(Number(blockNumberTmp));
           addBlock(Number(blockNumberTmp));
@@ -110,7 +107,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const block = await client().getBlock({
+        const block = await client.getBlock({
           nubmer: blockNumber
         })
         set_transactions(block.transactions);
@@ -134,7 +131,7 @@ export default function Logs() {
     let tryNumber = 0;
     while (!loaded) {
       try {
-        const transaction = await client().getTransaction({
+        const transaction = await client.getTransaction({
           hash: tx
         });
         set_tx(transaction);
