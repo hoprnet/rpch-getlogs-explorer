@@ -10,9 +10,8 @@ const RPC = 'https://rpc.gnosischain.com';
 const RPChOptions = {
   forceZeroHop: true,
   provider: RPC,
-  discoveryPlatformEndpoint: 'https://discovery-platform.staging.hoprnet.link'
 };
-const RPChToken = 'cd86943feac3b8ef534c792c0e2bbfdf73c05a26b0798d0d';
+const RPChToken = '9979a6246bf718649e9c22e72bf0412f1656c74d0d1ae953';
 
 const RPChSDK = new SDK(RPChToken, RPChOptions);
 const client = createClient({
