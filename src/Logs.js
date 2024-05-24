@@ -2,25 +2,42 @@
 import React, { useState, useEffect } from 'react';
 import { createClient, custom, publicActions } from 'viem';
 import { gnosis } from 'viem/chains';
+
+// The SDK object is the main entrypoint for RPCh usage.
 import SDK from '@rpch/sdk';
 
 const UPDATE_INTERVAL_MS = 10_000;
 const RPC = 'https://rpc.gnosischain.com';
 
+// Setting a few mandatory options before initializing the SDK.
 const RPChOptions = {
+  // Useful for development because it does not incur in-protocol costs, has
+  // less latency and more bandwidth.
   forceZeroHop: true,
+  // We set the same provider for all requests as before.
   provider: RPC,
 };
-const RPChToken = '9979a6246bf718649e9c22e72bf0412f1656c74d0d1ae953';
 
+// This token can be obtained from https://access.rpch.net/
+const RPChToken = 'PLACEHOLDER';
+
+// Initializing the SDK finally
 const RPChSDK = new SDK(RPChToken, RPChOptions);
+
+// Because we need to intercept outgoing http calls we must create a custom
+// transport module for viem here.
 const client = createClient({
   chain: gnosis,
   transport: custom({
     async request({ method, params }) {
+      // We use the original request and attach randomized id.
       const payload = { method, params, jsonrpc: '2.0', id: Math.random() };
+      // The wrapped Ethereum JSON-RPC request is then sent via RPCh and the
+      // HOPR network.
       const response = await RPChSDK.send(payload);
+      // Logging the response for debugging purposes.
       console.log('debug response', response);
+      // Finally return the response JSON object.
       const responseJson = JSON.parse(response.text).result;
       return responseJson;
     },
